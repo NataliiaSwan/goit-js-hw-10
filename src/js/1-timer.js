@@ -25,6 +25,7 @@ let intervalId;
 const options = {
   enableTime: true,
   time_24hr: true,
+  defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
     const userDate = new Date(selectedDates[0]).getTime();
@@ -48,7 +49,7 @@ const options = {
   },
 };
 
-flatpickr('#datetime-picker', options);
+flatpickr(input, options);
 
 function updateClockface({ days, hours, minutes, seconds }) {
   daysTime.textContent = `${days}`;
@@ -60,6 +61,12 @@ function updateClockface({ days, hours, minutes, seconds }) {
 function startTimer() {
   clearInterval(intervalId);
   intervalId = setInterval(timer, 1000);
+
+  if (timeDifference <= 0) {
+    valueElems.forEach(el => (el.textContent = '00'));
+    input.removeAttribute('disabled');
+    return;
+  }
 }
 
 function timer() {
