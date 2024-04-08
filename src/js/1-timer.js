@@ -6,18 +6,14 @@ import iziToast from 'izitoast';
 
 import 'izitoast/dist/css/iziToast.min.css';
 
-const startBtn = document.querySelector('[data-start]');
-const daysTime = document.querySelector('[data-days]');
-const hoursTime = document.querySelector('[data-hours]');
-const minutesTime = document.querySelector('[data-minutes]');
-const secondsTime = document.querySelector('[data-seconds]');
 const input = document.querySelector('#datetime-picker');
+const startBtn = document.querySelector('button[data-start]');
+const timerDays = document.querySelector('[data-days]');
+const timerHours = document.querySelector('[data-hours]');
+const timerMinutes = document.querySelector('[data-minutes]');
+const timerSeconds = document.querySelector('[data-seconds]');
 
-startBtn.addEventListener('click', () => {
-  startBtn.disabled = true;
-  input.disabled = true;
-  startTimer();
-});
+startBtn.addEventListener('click', onClickStartTimer);
 
 let timeDifference;
 let intervalId;
@@ -28,73 +24,89 @@ const options = {
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    const userDate = new Date(selectedDates[0]).getTime();
-    const startDate = Date.now();
-
-    if (userDate >= startDate) {
-      startBtn.disabled = false;
-      timeDifference = userDate - startDate;
-      updateClockface(convertMs(timeDifference));
+    if (selectedDates[0] <= Date.now()) {
+      disableBtn();
+      addErrorMessage();
     } else {
-      iziToast.error({
-        fontSize: 'large',
-        close: false,
-        position: 'topRight',
-        messageColor: 'white',
-        timeout: 2000,
-        backgroundColor: 'red',
-        message: 'Please choose a date in the future',
-      });
+      enableBtn();
+      removeErrorMessage();
+      timeDifference = selectedDates[0];
     }
   },
 };
 
 flatpickr(input, options);
 
-function updateClockface({ days, hours, minutes, seconds }) {
-  daysTime.textContent = `${days}`;
-  hoursTime.textContent = `${hours}`;
-  minutesTime.textContent = `${minutes}`;
-  secondsTime.textContent = `${seconds}`;
+function onClickStartTimer() {
+  intervalId = setInterval(calculateTimeLeft, 1000);
+  disableBtn();
+  input.setAttribute('disabled', '');
 }
 
-function startTimer() {
-  clearInterval(intervalId);
-  intervalId = setInterval(timer, 1000);
+function updateClockface(ms) {
+  const { days, hours, minutes, seconds } = convertMs(ms);
 
-  if (timeDifference <= 0) {
-    valueElems.forEach(el => (el.textContent = '00'));
-    input.removeAttribute('disabled');
-    return;
-  }
-}
-
-function timer() {
-  if (timeDifference > 0) {
-    timeDifference -= 1000;
-    updateClockface(convertMs(timeDifference));
-  } else {
+  if (!days && !hours && !minutes && !seconds) {
     clearInterval(intervalId);
-    input.disabled = false;
+    input.removeAttribute('disabled');
   }
+
+  timerDays.textContent = addLeadingZero(days);
+  timerHours.textContent = addLeadingZero(hours);
+  timerMinutes.textContent = addLeadingZero(minutes);
+  timerSeconds.textContent = addLeadingZero(seconds);
+}
+
+function calculateTimeLeft() {
+  const currentDate = new Date().getTime();
+  const selectedDate = new Date(timeDifference).getTime();
+  const ms = selectedDate - currentDate;
+  updateClockface(ms);
+}
+
+function disableBtn() {
+  startBtn.setAttribute('disabled', '');
+}
+
+function enableBtn() {
+  startBtn.removeAttribute('disabled');
 }
 
 function addLeadingZero(value) {
-  return String(value).padStart(2, '0');
+  return value.toString().padStart(2, '0');
 }
 
-function convertMs(time) {
+function addErrorMessage() {
+  iziToast.error({
+    backgroundColor: 'tomato',
+    message: 'Please choose a date in the future',
+    messageColor: 'white',
+    messageSize: '20',
+    position: 'topRight',
+    close: true,
+    displayMode: 2,
+  });
+}
+
+function removeErrorMessage() {
+  iziToast.destroy();
+}
+
+function convertMs(ms) {
+  // Number of milliseconds per unit of time
   const second = 1000;
   const minute = second * 60;
   const hour = minute * 60;
   const day = hour * 24;
 
-  const days = addLeadingZero(Math.floor(time / day));
-  const hours = addLeadingZero(Math.floor((time % day) / hour));
-  const minutes = addLeadingZero(Math.floor(((time % day) % hour) / minute));
-  const seconds = addLeadingZero(
-    Math.floor((((time % day) % hour) % minute) / second)
-  );
+  // Remaining days
+  const days = Math.floor(ms / day);
+  // Remaining hours
+  const hours = Math.floor((ms % day) / hour);
+  // Remaining minutes
+  const minutes = Math.floor(((ms % day) % hour) / minute);
+  // Remaining seconds
+  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
   return { days, hours, minutes, seconds };
 }
