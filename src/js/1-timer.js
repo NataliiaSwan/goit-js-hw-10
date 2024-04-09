@@ -47,7 +47,7 @@ flatpickr(input, options);
 
 function onClickStartTimer() {
   intervalId = setInterval(calculateTimeLeft, 1000);
-  startBtn.disabled = false;
+  startBtn.disabled = true;
   input.disabled = true;
 }
 
