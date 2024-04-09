@@ -14,6 +14,7 @@ const timerMinutes = document.querySelector('[data-minutes]');
 const timerSeconds = document.querySelector('[data-seconds]');
 
 startBtn.addEventListener('click', onClickStartTimer);
+startBtn.disabled = true;
 
 let timeDifference;
 let intervalId;
@@ -25,11 +26,18 @@ const options = {
   minuteIncrement: 1,
   onClose(selectedDates) {
     if (selectedDates[0] <= Date.now()) {
-      disableBtn();
-      addErrorMessage();
+      startBtn.disabled = true;
+      iziToast.error({
+        backgroundColor: 'tomato',
+        message: 'Please choose a date in the future',
+        messageColor: 'white',
+        messageSize: '20',
+        position: 'topRight',
+        close: true,
+        displayMode: 2,
+      });
     } else {
-      enableBtn();
-      removeErrorMessage();
+      startBtn.disabled = false;
       timeDifference = selectedDates[0];
     }
   },
@@ -39,8 +47,8 @@ flatpickr(input, options);
 
 function onClickStartTimer() {
   intervalId = setInterval(calculateTimeLeft, 1000);
-  disableBtn();
-  input.setAttribute('disabled', '');
+  startBtn.disabled = false;
+  input.disabled = true;
 }
 
 function updateClockface(ms) {
@@ -48,7 +56,7 @@ function updateClockface(ms) {
 
   if (!days && !hours && !minutes && !seconds) {
     clearInterval(intervalId);
-    input.removeAttribute('disabled');
+    input.disabled = false;
   }
 
   timerDays.textContent = addLeadingZero(days);
@@ -57,6 +65,7 @@ function updateClockface(ms) {
   timerSeconds.textContent = addLeadingZero(seconds);
 }
 
+
 function calculateTimeLeft() {
   const currentDate = new Date().getTime();
   const selectedDate = new Date(timeDifference).getTime();
@@ -64,32 +73,8 @@ function calculateTimeLeft() {
   updateClockface(ms);
 }
 
-function disableBtn() {
-  startBtn.setAttribute('disabled', '');
-}
-
-function enableBtn() {
-  startBtn.removeAttribute('disabled');
-}
-
 function addLeadingZero(value) {
   return value.toString().padStart(2, '0');
-}
-
-function addErrorMessage() {
-  iziToast.error({
-    backgroundColor: 'tomato',
-    message: 'Please choose a date in the future',
-    messageColor: 'white',
-    messageSize: '20',
-    position: 'topRight',
-    close: true,
-    displayMode: 2,
-  });
-}
-
-function removeErrorMessage() {
-  iziToast.destroy();
 }
 
 function convertMs(ms) {
