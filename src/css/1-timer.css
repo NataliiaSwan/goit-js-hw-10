@@ -36,7 +36,6 @@ button {
   padding: 8px 16px;
   width: 75px;
   height: 40px;
-  background: #cfcfcf;
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   font-size: 16px;
@@ -44,9 +43,10 @@ button {
   letter-spacing: 0.04em;
   color: #989898;
   cursor: pointer;
-}
-button:active {
   background: #4e75ff;
+}
+button:disabled {
+  background: #cfcfcf;
   color: #fff;
 }
 button:hover {
